@@ -21,7 +21,8 @@ TCP_PORT_RE_STR = '()([1-9]|[1-5]?[0-9]{2,4}|6[1-4][0-9]{3}|65[1-4][0-9]{2}|655[
 TCP_PORT_RE = re.compile(f'^{TCP_PORT_RE_STR}$')
 HOSTNAME_CHR_MAX_RE_STR = '.{0,255}'
 CONNECTION_STRING_RE = re.compile(f'^{UNIX_USER_RE_STR}@{HOSTNAME_CHR_MAX_RE_STR}:{TCP_PORT_RE_STR}$')
-def parse(connection_string=None,jumphost=None):
+
+def connection_str(connection_string=None):
 
     """
     Parses the connection string composed of User@HostName:Port passed from ssh into eicproxy.
@@ -29,7 +30,7 @@ def parse(connection_string=None,jumphost=None):
     :param connection_string: A string formmated 'User@HostName:Port'
     :type connection_string: string
     :param jumphost
-    :return: dict containing at least os_user, ssh_host_token, ssh_host_token_type, ssh_port. host_token_type will be one of private_ip,public_ip,
+    :return: dict containing at least os_user, host_token, host_token_type, ssh_port. host_token_type will be one of private_ip,public_ip,
     :rtype: conection_dict: dict
     """
     connection_dict = dict()
@@ -41,8 +42,29 @@ def parse(connection_string=None,jumphost=None):
     else:
         raise ValueError(f'eicproxy recieved invalid conection string: {connection_string}')
 
-    if _is_valid_target(jumphost):
+    if _is_valid_instance_id(host_token):
+        host_token_type = instance_id
+    elif _is_valid_ipv4_address(host_token):
+        
+    if len(args) < 2:
+        raise AssertionError('Missing target')
+    if len(args[1]) < 1:
+        raise AssertionError('Missing target')
 
+    """
+    Our flags.  As these are via argparse they're free.
+    Instance details are a bit weird.  Since the instance ID can either be the actual "host" or a flag we have to group it.
+    We do this with an "instance bundle" dict.
+    Note we don't load the actual instance DNS/IP/ID here - that comes later.
+    """
+    instance_bundles = [
+        {
+            'profile': args[0].profile,
+            'instance_id': args[0].instance_id,
+            'region': args[0].region,
+            'zone': args[0].zone
+        }
+    ]
 
     return instance_bundles, flags, command
     
@@ -92,6 +114,33 @@ def _is_valid_ipv6_address(address):
         return False
     return True
 
+def _is_valid_dns_hostname(hostname):
+        """
+    Validates if the provided "hostname" is a valid DNS name or IP address
+
+    :param hostname: FQDN to validate
+    :type hostname: basestring
+    :return: Whether the given hostname is a valid DNS name or IP address
+    :rtype: bool
+    """
+    if not hostname:
+        return False
+
+    # Check if it's a valid DNS name
+
+    if hostname[-1] == '.':
+        hostname = hostname[:-1] # strip exactly one dot from the right, if present
+    if len(hostname) < 1 or len(hostname) > 253: # Technically 255 octets but 2 are used for encoding
+        return False
+
+    labels = hostname.split(".")
+
+    # the TLD must be not all-numeric
+    if re.match(r"[0-9]+$", labels[-1]):
+        return False
+
+    allowed = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
+    return all(allowed.match(label) for label in labels)
 
 def _is_valid_target(hostname):
     """
@@ -110,17 +159,3 @@ def _is_valid_target(hostname):
         return True
 
     # Check if it's a valid DNS name
-
-    if hostname[-1] == '.':
-        hostname = hostname[:-1] # strip exactly one dot from the right, if present
-    if len(hostname) < 1 or len(hostname) > 253: # Technically 255 octets but 2 are used for encoding
-        return False
-
-    labels = hostname.split(".")
-
-    # the TLD must be not all-numeric
-    if re.match(r"[0-9]+$", labels[-1]):
-        return False
-
-    allowed = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
-    return all(allowed.match(label) for label in labels)

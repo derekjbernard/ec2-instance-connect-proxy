@@ -4,10 +4,13 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-ec2instanceconnectcli = "*"
-
-[packages]
+pytest = ">=3.2.3"
+pytest-cov = ">=2.5.1"
 boto3 = "*"
 
+[packages]
+cryptography = ">=1.9"
+botocore = ">=1.12.179"
+eicproxy = {editable = true,path = "."}
+
 [requires]
-python_version = "3.7"

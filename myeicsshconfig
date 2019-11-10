@@ -1,0 +1,79 @@
+# Host connect-to-net2530
+#   User djbernaradmin
+#   HostName net2530.net.ucf.edu
+#   Port 22
+#   PasswordAuthentication no
+#   StrictHostKeyChecking no
+#   IdentityFile /Users/djbernar/.ssh/vscode_task1
+#   PubkeyAuthentication yes
+#   # GSSAPIAuthentication yes
+#   # GSSAPIDelegateCredentials yes
+
+Host *.net.ucf.edu
+  #StrictHostKeyChecking no
+  PubkeyAuthentication no
+  GSSAPIAuthentication yes
+  GSSAPIDelegateCredentials yes
+
+# Host roots-example-project.test
+#   HostName 127.0.0.1
+#   User vagrant
+#   Port 2200
+#   UserKnownHostsFile /dev/null
+#   StrictHostKeyChecking no
+#   PasswordAuthentication no
+#   IdentityFile /Users/djbernar/code/roots-example-project.com/trellis/.vagrant/machines/default/virtualbox/private_key
+#   IdentitiesOnly yes
+#   LogLevel FATAL
+#   ForwardAgent yes
+
+# Host example.com
+#   HostName 127.0.0.1
+#   User vagrant
+#   Port 2222
+#   UserKnownHostsFile /dev/null
+#   StrictHostKeyChecking no
+#   PasswordAuthentication no
+#   IdentityFile /Users/djbernar/code/roots-example-project.com/trellis/.vagrant/machines/default/virtualbox/private_key
+#   IdentitiesOnly yes
+#   LogLevel FATAL
+#   ForwardAgent yes
+
+Host 10.173.22.160
+  User djbernar
+  IdentityFile /Users/djbernar/.ssh/id_rsa 
+
+Host git-codecommit.*.amazonaws.com
+  User APKAYMJBZSZXCOB77DEK
+  IdentityFile ~/.ssh/id_rsa.pub
+
+Host cm-munki
+  Hostname git-codecommit.us-east-1.amazonaws.com
+  User APKAYMJBZSZXCOB77DEK
+  IdentityFile /Users/djbernar/.ssh/id_rsa.pub
+
+Host awssh-dr-vlamp-3
+  Hostname 54.210.208.132
+  User ec2-user
+  IdentityFile /Users/djbernar/.ssh/id_rsa.pub
+
+Host eic-dr-vlmap-3
+  HostName i-004cb95e71985a510
+  User ec2-user
+  ProxyCommand eicproxy %r@%h:%p
+
+Host eic-pj-dr-vlamp-4
+  HostName i-074207dcd98a3cbb8
+  User ec2-user
+  ProxyCommand eicproxy %r@%h:%p --use-private-ip --jumphost eic-dr-vlmap-3
+
+  # hack to use tagName. used with command like: `ssh ec2-user@awstn-my-ec2-instance-name`
+Host awstn-*
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+  ProxyCommand bash -c 'tagname="%h"; eicproxy %r@${tagname#awstn-}:%p --use-tag-name'
+
+Host i-*
+  StrictHostKeyChecking no
+  UserKnownHostsFile=/dev/null
+  ProxyCommand eicproxy %r@%h:%p

@@ -6,6 +6,8 @@ import os
 import subprocess
 import sys
 
+from shutil import which
+from ec2instanceconnectproxy.nclib import Netcat
 from botocore.exceptions import ClientError
 from os.path import expanduser, isfile, join
 
@@ -35,11 +37,13 @@ parser.add_argument('--public-key-file', type=argparse.FileType('r'),
 parser.add_argument('--private-key-file', type=argparse.FileType('r'),
                     default=default_key_file_path_private, help=f'Private key file to use for connection. Default: {default_key_file_path_private}')
 parser.add_argument('--regions', type=str, nargs='+', default=default_regions, help=f'Look for the instance in the given regions. Default: {default_regions}')
-parser.add_argument('--use-private-ip', action='store_true', help=f'Use private IP even if public IP is available. sshaws will use private ip automatically, if no public IP is available.', default=default_use_private_ip)
+parser.add_argument('--use-private-ip', action='store_true', help=f'Use private IP even if public IP is available. eicproxy will use private ip automatically, if no public IP is available.', default=default_use_private_ip)
 parser.add_argument('--use-tag-name', action='store_true', help=f'Search for instance with Tag Name equal to the host instance_id parameter.', default=default_use_tag_name)
 parser.add_argument('--jumphost', action='store', help='Proxy through a defined ssh config Host', type=str, metavar='')
 parser.add_argument('--profile', action='store', help='AWS Config Profile', type=str, default=default_aws_profile, metavar='')
 args = parser.parse_args()
+
+#print(str(args), file=sys.stderr)
 
 def connect(region, profile_name):
     session = boto3.session.Session(profile_name=profile_name, region_name=region)
@@ -105,9 +109,12 @@ def connect(region, profile_name):
 profile = args.profile
 
 str_id = args.connection_str
-os_user = str_id.split('@')[0]
-host_token = str_id.split('@')[1].split(':')[0]
-ssh_port = str_id.split('@')[1].split(':')[1]
+if '@' in str_id and ':' in str_id:
+    os_user = str_id.split('@')[0]
+    host_token = str_id.split('@')[1].split(':')[0]
+    ssh_port = str_id.split('@')[1].split(':')[1]
+else:
+    print("invalid connection str", file=sys.stderr)
 
 
 ip_to_connect_to = None
@@ -129,13 +136,24 @@ if args.jumphost:
     command_list.extend(['-W'])
     command_list.extend([f'{ip_to_connect_to}:{ssh_port}'])
     print(str(command_list))
+    try:
+        subprocess.run(command_list)
+    except (BrokenPipeError, IOError):
+        pass
 else:
-    command_list = ['nc']
-    command_list.extend([f'{ip_to_connect_to}', f'{ssh_port}'])
+    # if nc is present use nc, else use nclib netcat.
+    if which('nc') is not None:
+        print('using', str(which('nc')), str(ip_to_connect_to), str(ssh_port))
+        command_list = ['nc']
+        command_list.extend([f'{ip_to_connect_to}'])
+        command_list.extend([f'{ssh_port}'])
+        try:
+            subprocess.run(command_list)
+        except (BrokenPipeError, IOError):
+            pass
+    else:
+        print(f'netcat not found. using nclib Netcat')
+        options = {'verbose': False, 'listen': False, 'listenmore': False}
+        Netcat(server=(ip_to_connect_to, int(ssh_port)), verbose=options['verbose']).interact()
 
-try:
-    subprocess.run(command_list)
-except (BrokenPipeError, IOError):
-    pass
-
-sys.stderr.close()
+#sys.stderr.close()
