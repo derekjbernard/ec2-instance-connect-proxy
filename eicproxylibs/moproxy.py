@@ -90,12 +90,9 @@ def main(program, mode):
     """
     
     if args[0].generate_key_path is not None:
-        key = key_utils.generate_key(2048)
+        key = mproxy_key_utils.generate_key_at(args[0].generate_key_path, 2048)
         public_key = key_utils.serialize_key(key, encoding='OpenSSH').decode('utf-8')
-        with open(args[0].generate_key_path, 'w') as f:
-            f.write(key)
-            os.chmod(args[0].generate_key_path, 0o600)
-        return tempf
+
     elif args[0].public_key_file is not None:
         public_key = args[0].public_key_file
     else:
@@ -104,8 +101,9 @@ def main(program, mode):
             keyfiles = listdir(expanduser('~/.ssh'))
         except (FileNotFoundError):
             makedirs(pathjoin(expanduser('~'),'.ssh'), mode=0o600)
+            
         # set of acceptable default keys in order of acceptance
-        keytypes = (['id_rsa.pub', 'id_ed25519.pub', 'id_ecdsa.pub', 'id_dsa.pub'])
+        keytypes = ['id_rsa.pub', 'id_ed25519.pub', 'id_ecdsa.pub', 'id_dsa.pub']
         # The first acceptable key file found
         try:
             public_key = next(
