@@ -87,7 +87,7 @@ def _validate_instance_bundles(instance_bundles, mode):
     For supported modes ensure that instance_id exists.
     """
     for bundle in instance_bundles:
-        if mode in ['ssh', 'sftp']:
+        if mode in ['ssh', 'sftp', 'proxy']:
             if not INSTANCE_ID_RE.match(bundle['instance_id']):
                 raise AssertionError('Missing instance_id')
 

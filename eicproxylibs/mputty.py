@@ -14,10 +14,10 @@
 import argparse
 import sys
 
-from ec2instanceconnectcli.EC2InstanceConnectCLI import EC2InstanceConnectCLI
-from ec2instanceconnectcli.EC2InstanceConnectCommand import EC2InstanceConnectCommand
-from ec2instanceconnectcli.EC2InstanceConnectLogger import EC2InstanceConnectLogger
-from ec2instanceconnectcli import input_parser
+from eicproxylibs.EC2InstanceConnectCLI import EC2InstanceConnectCLI
+from eicproxylibs.EC2InstanceConnectCommand import EC2InstanceConnectCommand
+from eicproxylibs.EC2InstanceConnectLogger import EC2InstanceConnectLogger
+from eicproxylibs import input_parser
 
 DEFAULT_INSTANCE = ''
 DEFAULT_PROFILE = None

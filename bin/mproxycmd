@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import sys
-from ec2instanceconnectproxy import mops
+from eicproxylibs import moproxy
 
 def main():
-    return mops.main("ssh", "ssh")
+    return moproxy.main("mproxy", "proxy")
 
 if __name__ == '__main__':
     sys.exit(main())

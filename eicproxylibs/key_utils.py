@@ -149,3 +149,9 @@ def convert_pem_to_openssh(pem_key):
     loaded_key = crypto_serialization.load_pem_public_key(pem_key, backend=crypto_default_backend())
     return loaded_key.public_bytes(encoding=crypto_serialization.Encoding.OpenSSH,
                                    format=crypto_serialization.PublicFormat.OpenSSH)
+
+def load_key_from_file(filename):
+    with open(filename, 'rb') as pem_in:
+        pemlines = pem_in.read()
+    private_key = crypto_serialization.load_pem_private_key(pemlines, None, crypto_default_backend())
+    return private_key

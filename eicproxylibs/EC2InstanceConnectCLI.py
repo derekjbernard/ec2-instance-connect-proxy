@@ -17,8 +17,8 @@ import time
 from subprocess import Popen
 
 import botocore.session
-from ec2instanceconnectproxy import __version__ as CLI_VERSION
-from ec2instanceconnectproxy import ec2_util, key_publisher
+from eicproxylibs import __version__ as CLI_VERSION
+from eicproxylibs import ec2_util, key_publisher
 
 
 class EC2InstanceConnectCLI(object):
@@ -37,7 +37,7 @@ class EC2InstanceConnectCLI(object):
         :param cli_command: command to run in underlying shell
         :type cli_command: basestring
         :param logger: CLI logging utility to send log messages to
-        :type logger: ec2instanceconnectproxy.EC2InstanceConnectLogger.EC2InstanceConnectLogger
+        :type logger: eicproxylibs.EC2InstanceConnectLogger.EC2InstanceConnectLogger
         """
         self.instance_bundles = instance_bundles
         self.pub_key = pub_key

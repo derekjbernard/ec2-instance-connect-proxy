@@ -14,7 +14,7 @@
 import os
 import tempfile
 
-from ec2instanceconnectcli import key_utils
+from eicproxylibs import key_utils
 
 
 class EC2InstanceConnectKey(object):
@@ -22,29 +22,41 @@ class EC2InstanceConnectKey(object):
     Generates 2048 bit RSA SSH key pair to be used in conjunction with the CLI.
     Writes the private key to a temporary file on disk and changes it's permissions to 600 (read/write only by owner)
     """
-    def __init__(self, logger):
+    def __init__(self, logger, key_path=None, bits=2048):
         """
         :param logger: EC2 Instance Connect CLI logger to use for log messages
         :type logger: ec2instanceconnectcli.EC2InstanceConnectLogger.EC2InstanceConnectLogger
         """
         self.logger = logger
-        key = key_utils.generate_key(2048)
+        self.key_path = key_path
+        self.bits = bits
+        key = key_utils.generate_key(self.bits)
         self.pub_key = key_utils.serialize_key(key, encoding='OpenSSH').decode('utf-8')
         priv_key = key_utils.serialize_key(key, return_private=True).decode('utf-8')
-        self.tempf = self._write_priv_key(priv_key)
+        self.tempf = self._write_priv_key(priv_key, self.key_path)
 
-    def _write_priv_key(self, _priv_key):
+    def _write_priv_key(self, _priv_key, key_path=None):
         """
         Writes the private key to the pre-determined temp file
 
         :param _priv_key: private key body
         :type _priv_key: bytearray
         """
-        tempf = tempfile.NamedTemporaryFile(delete=False)
-        with open(tempf.name, 'w') as f:
-            f.write(_priv_key)
-            os.chmod(tempf.name, 0o600)
-        tempf.file.close()
+        if key_path is None:
+            tempf = tempfile.NamedTemporaryFile(delete=False)
+            key_path = tempf.name
+
+
+        try:
+            with open(key_path, 'w') as f:
+                f.write(_priv_key)
+                os.chmod(f.name, 0o600)
+                tempf = f
+            tempf.name.close()
+        except (FileNotFoundError):
+            raise AssertionError('can not generate key, invalid path')
+            sys.exit(1)
+        
         return tempf
 
     def get_pub_key(self):

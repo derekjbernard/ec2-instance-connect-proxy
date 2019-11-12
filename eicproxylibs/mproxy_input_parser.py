@@ -79,6 +79,9 @@ def parseargs(args, mode='ssh'):
 
     #validate instance_bundles
     _validate_instance_bundles(instance_bundles, mode)
+    if mode == 'proxy':
+        print(str(instance_bundles))
+        command = f"{command} --instance_id {instance_bundles[0]['instance_id']}"
 
     return instance_bundles, flags, command
 

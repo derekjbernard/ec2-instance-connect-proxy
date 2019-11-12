@@ -29,7 +29,7 @@ class EC2InstanceConnectCommand(object):
         :param program_command: program specific ad-hoc command.
         :type program_command: basestring
         :param logger: EC2 Instance Connect CLI logger to write log messages to
-        :type logger: ec2instanceconnectcli.EC2InstanceConnectLogger.EC2InstanceConnectLogger
+        :type logger: eicproxylibs.EC2InstanceConnectLogger.EC2InstanceConnectLogger
         """
         self.logger = logger
         self.program = program

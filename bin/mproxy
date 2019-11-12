@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+
+from __future__ import absolute_import, division, print_function
+import argparse
+import boto3
+import os
+import subprocess
+import sys
+
+from shutil import which, copy
+from eicproxylibs.nclib import Netcat
+from eicproxylibs import sshconf
+from botocore.exceptions import ClientError
+from os.path import expanduser, isfile, join
+
+home = expanduser("~")
+
+parser = argparse.ArgumentParser(description=f'ssh ProxyCommand script that ec2 instance connect access using your IAM user has rights for and that are reachable.')
+parser.add_argument('connection_str', type=str, help='Pass ssh TOKENS as a connection string: `eicproxy %r@%h:%p` ProxyCommand translates it to `eicproxy <User>@<HostName>:<Port>`.')
+parser.add_argument('-i', '--private-key-file', type=str,
+                    help=f'Private key file to use for connection.')
+parser.add_argument('-t', '--instance_id', action='store', help='EC2 Instance ID. Required if target is hostname', type=str, metavar='')
+args = parser.parse_args()
+
+print(args, file=sys.stderr)
+
+str_id = args.connection_str
+if '@' in str_id and ':' in str_id:
+    os_user = str_id.split('@')[0]
+    host_token = str_id.split('@')[1].split(':')[0]
+    ssh_port = str_id.split('@')[1].split(':')[1]
+else:
+    print("invalid connection str", file=sys.stderr)
+
+
+ip_to_connect_to = host_token
+
+if not ip_to_connect_to:
+    print(f'Error: Did not find {host_token} in any region: {args.regions}')
+    sys.exit(1)
+
+if args.private_key_file != f'{home}/.ssh/{os_user}{args.instance_id}':
+    copy(str(args.private_key_file), f'{home}/.ssh/{os_user}{args.instance_id}')
+
+
+# if nc is present use nc, else use nclib netcat.
+if which('nc') is not None:
+    print('using', str(which('nc')), str(ip_to_connect_to), str(ssh_port))
+    command_list = ['nc']
+    command_list.extend([f'{ip_to_connect_to}'])
+    command_list.extend([f'{ssh_port}'])
+    try:
+        subprocess.run(command_list)
+    except (BrokenPipeError, IOError):
+        pass
+else:
+    print(f'netcat not found. using nclib Netcat', file=sys.stderr)
+    options = {'verbose': False, 'listen': False, 'listenmore': False}
+    Netcat(server=(ip_to_connect_to, int(ssh_port)), verbose=options['verbose']).interact()
+
+sys.stderr.close()
