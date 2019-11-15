@@ -27,7 +27,7 @@ def find_version(*file_paths):
 
 setup(
     name='eicproxy',
-    version=find_version('ec2instanceconnectproxy', '__init__.py'),
+    version=find_version('eicproxylibs', '__init__.py'),
     description='An ssh ProxyCommand utility that integrates AWS "EC2 Instance Connect" with native ssh tools (ssh, rsync, ansible, etc).',
     long_description=long_description,
     long_description_content_type='text/markdown',
