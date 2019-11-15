@@ -69,7 +69,7 @@ def parseargs(args, mode='ssh'):
     # We do this as an array to support future commands that may need multiple instances (eg, scp)
 
     # Process out the command flags & target data
-    flags, command, instance_bundles = _parse_command_flags(args[1], instance_bundles, is_ssh=(mode=='ssh'))
+    flags, command, instance_bundles = _parse_command_flags(args[1], instance_bundles, mode)
 
     # Process the instance & target data to give us an actual picture of what end hosts we're working with
     instance_bundles = _parse_instance_bundles(instance_bundles)
@@ -79,9 +79,9 @@ def parseargs(args, mode='ssh'):
 
     #validate instance_bundles
     _validate_instance_bundles(instance_bundles, mode)
-    if mode == 'proxy':
-        print(str(instance_bundles))
-        command = f"{command} --instance_id {instance_bundles[0]['instance_id']}"
+    # if mode == 'proxy':
+    #     print(str(instance_bundles))
+    #     command = f"{command} --instance_id {instance_bundles[0]['instance_id']}"
 
     return instance_bundles, flags, command
 
@@ -94,7 +94,7 @@ def _validate_instance_bundles(instance_bundles, mode):
             if not INSTANCE_ID_RE.match(bundle['instance_id']):
                 raise AssertionError('Missing instance_id')
 
-def _parse_command_flags(raw_command, instance_bundles, is_ssh=False):
+def _parse_command_flags(raw_command, instance_bundles, mode):
     """
     Parses the command from the user and strips out two pieces:
     1) The flags for the underlying command
@@ -104,8 +104,8 @@ def _parse_command_flags(raw_command, instance_bundles, is_ssh=False):
     :type raw_command: basestring
     :param instance_bundles: dicts containing information about desired EC2 instances
     :type instance_bundles: list
-    :param is_ssh: Specifies if we are running an ssh command.  There is an extra flag we consider if so.
-    :type is_ssh: bool
+    :param mode: Specifies if we are running an ssh command.  There is an extra flag we consider if so.
+    :type mode: string
     :return: tuple of flags and final comamnd or file list
     :rtype: tuple
     """
@@ -118,32 +118,33 @@ def _parse_command_flags(raw_command, instance_bundles, is_ssh=False):
     """
     Flags for the underlying command.  These will always be in the format -[flag indicator] [flag value]
     """
-    while command_index < len(raw_command) - 1:
-        if raw_command[command_index][0] != '-' and not is_flagged:
-            # We found something that's not a flag or a flag value.  Exit flag loop.
-            break
+    if mode != 'proxy':
+        while command_index < len(raw_command) - 1:
+            if raw_command[command_index][0] != '-' and not is_flagged:
+                # We found something that's not a flag or a flag value.  Exit flag loop.
+                break
 
-        used += 1
+            used += 1
 
-        # This is either a flag or a flag value
-        flags = '{0} {1}'.format(flags, raw_command[command_index])
+            # This is either a flag or a flag value
+            flags = '{0} {1}'.format(flags, raw_command[command_index])
 
-        if raw_command[command_index][0] == '-':
-            # Flag
-            is_flagged = True
-            if raw_command[command_index][1] == 'l' and is_ssh:
-                # We want to extract the user flag for ssh mode
-                is_user = True
+            if raw_command[command_index][0] == '-':
+                # Flag
+                is_flagged = True
+                if raw_command[command_index][1] == 'l' and mode == 'ssh':
+                    # We want to extract the user flag for ssh mode
+                    is_user = True
 
-        else:
-            # Flag value
-            is_flagged = False
-            if is_user:
-                # We want to extract the user flag for ssh mode
-                instance_bundles[0]['username'] = raw_command[command_index]
-                is_user = False
+            else:
+                # Flag value
+                is_flagged = False
+                if is_user:
+                    # We want to extract the user flag for ssh mode
+                    instance_bundles[0]['username'] = raw_command[command_index]
+                    is_user = False
 
-        command_index += 1
+            command_index += 1
 
     flags = flags.strip()
 

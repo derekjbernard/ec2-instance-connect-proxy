@@ -101,6 +101,7 @@ def main(program, mode):
         private_key = cli_key.get_priv_key_file()
     elif args[0].public_key_file is not None:
         public_key = args[0].public_key_file.read()
+        private_key = '/doent/matter'
     else:
         # Look for an acceptable default public key
         sshdir = pathjoin(expanduser('~'),'.ssh')
@@ -137,7 +138,7 @@ def main(program, mode):
                 sys.exit(1)
     
     cli_command = EC2InstanceConnectCommand(program, instance_bundles, private_key, flags, program_command, logger.get_logger())
-
+    print(cli_command)
     try:
         # TODO: Handling for if the '-i' flag is passed
         cli = EC2InstanceConnectCLI(instance_bundles, str(public_key), cli_command, logger.get_logger())

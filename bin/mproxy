@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser(description=f'ssh ProxyCommand script that ec2 
 parser.add_argument('connection_str', type=str, help='Pass ssh TOKENS as a connection string: `eicproxy %r@%h:%p` ProxyCommand translates it to `eicproxy <User>@<HostName>:<Port>`.')
 parser.add_argument('-i', '--private-key-file', type=str,
                     help=f'Private key file to use for connection.')
-parser.add_argument('-t', '--instance_id', action='store', help='EC2 Instance ID. Required if target is hostname', type=str, metavar='')
+parser.add_argument('-t', '--target', action='store', help='EC2 Instance ID. Required if target is hostname', type=str, metavar='')
 args = parser.parse_args()
 
 print(args, file=sys.stderr)
