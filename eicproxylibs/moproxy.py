@@ -55,22 +55,26 @@ def main(program, mode):
         """
 
     parser = argparse.ArgumentParser(usage=usage)
-    parser.add_argument('-r', '--region', action='store', help='AWS region', type=str, metavar='')
+    parser.add_argument('-r', '--region', action='store', help='AWS region', type=str, default='us-east-1', metavar='')
     parser.add_argument('-z', '--zone', action='store', help='Availability zone', type=str, metavar='')
-    parser.add_argument('-u', '--profile', action='store', help='AWS Config Profile', type=str, default=DEFAULT_PROFILE, metavar='')0000
+    parser.add_argument('-u', '--profile', action='store', help='AWS Config Profile', type=str, default=DEFAULT_PROFILE, metavar='')
+    parser.add_argument('-t', '--instance_id', action='store', help='EC2 Instance ID. Required if target is hostname', type=str, default=DEFAULT_INSTANCE, metavar='')
+    parser.add_argument('-d', '--debug', action="store_true", help='Turn on debug logging')
     parser.add_argument('-k', '--public-key-file', action='store', type=argparse.FileType('r'),
-                        default=default_public_key_file_path,
-                        help=f'Public key file to use for connection. Default: {default_key_file_path_public}')
+                        help=f'Public key file to use for connection.')
     parser.add_argument('-g', '--generate-key-path', action='store', type=str,  )
-    parser.add_argument('--use-private-ip', action='store_true', help=f'Use private IP even if public IP is available. private ip is used if no public IP is available.', default=default_use_private_ip)
-    parser.add_argument('--use-tag-name', action='store_true', help=f'Search for instance with Tag Name equal to the host instance_id parameter.', default=default_use_tag_name)
+    parser.add_argument('--use-private-ip', action='store_true', help=f'Use private IP even if public IP is available. private ip is used if no public IP is available.', default=False)
+    parser.add_argument('--use-tag-name', action='store_true', help=f'Search for instance with Tag Name equal to the host instance_id parameter.', default=False)
     parser.add_argument('--resolve-hostname', action='store', type=str, help=f'Search for instance trying to resolve dns or ip hostname to aws instance id', default=None)
     parser.add_argument('--jumphosts', action='store', help='ssh proxy through jumphosts to destination, processed in order given', type=str, nargs='+' , metavar='')
+
     args = parser.parse_known_args()
 
     print(str(args), file=sys.stderr)
 
     logger = EC2InstanceConnectLogger(args[0].debug)
+
+
     try:
         instance_bundles, flags, program_command = mproxy_input_parser.parseargs(args, mode)
     except Exception as e:
@@ -93,9 +97,10 @@ def main(program, mode):
     if args[0].generate_key_path is not None:
         cli_key = EC2InstanceConnectKey(logger.get_logger(),
                                         args[0].generate_key_path)
-        public_key = EC2InstanceConnectKey.get_pub_key()
+        public_key = cli_key.get_pub_key()
+        private_key = cli_key.get_priv_key_file()
     elif args[0].public_key_file is not None:
-        public_key = args[0].public_key_file
+        public_key = args[0].public_key_file.read()
     else:
         # Look for an acceptable default public key
         sshdir = pathjoin(expanduser('~'),'.ssh')
@@ -108,25 +113,34 @@ def main(program, mode):
             makedirs(sshdir, mode=0o600)
             cli_key = EC2InstanceConnectKey(logger.get_logger(),
                                             pathjoin(sshdir, 'id_rsa'))
-            public_key = EC2InstanceConnectKey.get_pub_key()
+            public_key = cli_key.get_pub_key()
+            private_key = cli_key.get_priv_key_file()
         if len(keyfiles) > 0:
             # Find first acceptable default public key
             try:
                 public_key_file = next(
-                    keyfile
-                    for keytype in keytypes
-                    for keyfile in keyfiles
-                    if '{0}.pub'.format(keytype) == keyfile
-                    )
+                    keyfile for keytype
+                    in keytypes for keyfile in keyfiles
+                    if keyfile == '{0}.pub'.format(keytype))
             except (StopIteration):
                 cli_key = EC2InstanceConnectKey(logger.get_logger(),
-                                                pathjoin(sshdir, 'id_rsa')
-                public_key = EC2InstanceConnectKey.get_pub_key()
+                                                pathjoin(sshdir, 'id_rsa'))
+                public_key = cli_key.get_pub_key()
+                private_key = cli_key.get_priv_key_file()
+            
+            try:
+                with open(pathjoin(sshdir, public_key_file), 'r') as pbkf:
+                    public_key = pbkf.read()
+                    private_key = public_key_file.split('.pub')[0]
+            except Exception as e:
+                print('Failed with:\n' + str(e))
+                sys.exit(1)
+    
+    cli_command = EC2InstanceConnectCommand(program, instance_bundles, private_key, flags, program_command, logger.get_logger())
 
-        )
     try:
         # TODO: Handling for if the '-i' flag is passed
-        cli = EC2InstanceConnectCLI(instance_bundles, cli_key.get_pub_key(), cli_command, logger.get_logger())
+        cli = EC2InstanceConnectCLI(instance_bundles, str(public_key), cli_command, logger.get_logger())
         cli.invoke_command()
     except Exception as e:
         print('Failed with:\n' + str(e))

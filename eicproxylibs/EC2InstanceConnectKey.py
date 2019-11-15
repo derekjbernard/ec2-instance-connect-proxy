@@ -54,13 +54,13 @@ class EC2InstanceConnectKey(object):
         if key_path is None:
             tempf = tempfile.NamedTemporaryFile(delete=False)
             key_path = tempf.name
+            print(key_path)
 
         try:
             with open(key_path, 'w') as f:
                 f.write(_priv_key)
                 os.chmod(f.name, 0o600)
-                tempf = f
-            tempf.name.close()
+                f.close()
         except (FileNotFoundError):
             raise AssertionError('can not generate key, invalid path')
             sys.exit(1)

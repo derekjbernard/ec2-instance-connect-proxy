@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 from shutil import which, copy
-from eicproxylibs.nclib import Netcat
+from nclib import Netcat
 from eicproxylibs import sshconf
 from botocore.exceptions import ClientError
 from os.path import expanduser, isfile, join
@@ -38,10 +38,6 @@ ip_to_connect_to = host_token
 if not ip_to_connect_to:
     print(f'Error: Did not find {host_token} in any region: {args.regions}')
     sys.exit(1)
-
-if args.private_key_file != f'{home}/.ssh/{os_user}{args.instance_id}':
-    copy(str(args.private_key_file), f'{home}/.ssh/{os_user}{args.instance_id}')
-
 
 # if nc is present use nc, else use nclib netcat.
 if which('nc') is not None:
