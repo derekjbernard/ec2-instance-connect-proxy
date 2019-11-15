@@ -35,7 +35,7 @@ setup(
     author='Derek J. Bernard',
     author_email='derekjbernard@gmail.com',
     classifiers=[  
-        'Development Status :: 4 - Beta',
+        'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
@@ -57,7 +57,7 @@ setup(
     packages=find_packages(exclude=['test']),
     package_data={},
     install_requires=['boto3'],
-    scripts=['bin/eicproxy'],
+    scripts=['bin/eicproxy','bin/mproxy','bin/mproxycmd'],
     project_urls={
         'Bug Reports': 'https://github.com/FrederikP/sshaws/issues',
         'Source': 'https://github.com/FrederikP/sshaws',

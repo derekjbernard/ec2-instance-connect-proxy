@@ -6,11 +6,12 @@ verify_ssl = true
 [dev-packages]
 pytest = ">=3.2.3"
 pytest-cov = ">=2.5.1"
-boto3 = "*"
+pipenv = "*"
 
 [packages]
+boto3 = "*"
 cryptography = ">=1.9"
 botocore = ">=1.12.179"
-eicproxy = {editable = true,path = "."}
+nclib = "*"
 
 [requires]
