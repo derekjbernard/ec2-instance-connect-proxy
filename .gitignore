@@ -6,3 +6,5 @@ __pycache__/
 dist/
 doc/generated/
 venv/
+.python-version
+.vscode/
