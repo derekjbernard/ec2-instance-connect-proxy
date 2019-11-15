@@ -86,32 +86,42 @@ def main(program, mode):
         define an existing public key to use with the public_key_file arg
     gernerate_key_path and public_key_file are mutually exclusive
     
-    public_key_file defaults to first found ~/.ssh/id_(rsa|ed25519|ecdsa|dsa).pub
+    public_key_file defaults to first found: 
+    ~/.ssh/id_(rsa|ed25519|ecdsa|dsa).pub
     """
     
     if args[0].generate_key_path is not None:
-        key = mproxy_key_utils.generate_key_at(args[0].generate_key_path, 2048)
-        public_key = key_utils.serialize_key(key, encoding='OpenSSH').decode('utf-8')
-
+        cli_key = EC2InstanceConnectKey(logger.get_logger(),
+                                        args[0].generate_key_path)
+        public_key = EC2InstanceConnectKey.get_pub_key()
     elif args[0].public_key_file is not None:
         public_key = args[0].public_key_file
     else:
         # Look for an acceptable default public key
+        sshdir = pathjoin(expanduser('~'),'.ssh')
+        # set of default keys in order of acceptance
+        keytypes = ['id_rsa', 'id_ed25519', 'id_ecdsa', 'id_dsa']
+        keyfiles = []
         try:
-            keyfiles = listdir(expanduser('~/.ssh'))
+            keyfiles = listdir(sshdir)
         except (FileNotFoundError):
-            makedirs(pathjoin(expanduser('~'),'.ssh'), mode=0o600)
-            
-        # set of acceptable default keys in order of acceptance
-        keytypes = ['id_rsa.pub', 'id_ed25519.pub', 'id_ecdsa.pub', 'id_dsa.pub']
-        # The first acceptable key file found
-        try:
-            public_key = next(
-                keyfile for keytype in keytypes for keyfile in keyfiles if keytype == keyfile
-                )
-        except (StopIteration):
-            
-        default_public_key_file_path = "{0}/{1}".format(
+            makedirs(sshdir, mode=0o600)
+            cli_key = EC2InstanceConnectKey(logger.get_logger(),
+                                            pathjoin(sshdir, 'id_rsa'))
+            public_key = EC2InstanceConnectKey.get_pub_key()
+        if len(keyfiles) > 0:
+            # Find first acceptable default public key
+            try:
+                public_key_file = next(
+                    keyfile
+                    for keytype in keytypes
+                    for keyfile in keyfiles
+                    if '{0}.pub'.format(keytype) == keyfile
+                    )
+            except (StopIteration):
+                cli_key = EC2InstanceConnectKey(logger.get_logger(),
+                                                pathjoin(sshdir, 'id_rsa')
+                public_key = EC2InstanceConnectKey.get_pub_key()
 
         )
     try:
