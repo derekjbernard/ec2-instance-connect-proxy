@@ -14,7 +14,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='eicproxy',
     version='0.0.1',
-    description='An ssh ProxyCommand utility that integrates AWS "EC2 Instance Connect" with native ssh tools (ssh, rsync, ansible, etc).,
+    description='An ssh ProxyCommand utility that integrates AWS "EC2 Instance Connect" with native ssh tools (ssh, rsync, ansible, etc).',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/derekjbernard/ec2-instance-connect-proxy',
