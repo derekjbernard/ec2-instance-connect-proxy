@@ -1,18 +1,18 @@
-eicproxy - An AWS EC2 Instance Connect (EIC) enabled ssh ProxyCommand utility.
+## eicproxy - An AWS EC2 Instance Connect (EIC) enabled ssh ProxyCommand utility.
 
 [EC2 Instance Connect]:https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Connect-using-EC2-Instance-Connect.html (EIC) grants ssh access to ec2 instances using aws credentials.
 
-eicproxy utility provides the following features:
-    * Brokers ec2 ssh access using AWS credentials with EIC.
-    * Uses ec2 instance id or tag Name as hostnames.
-    * supports bastion / jump hosts
-    * works with ssh based tools like:
-        * ansible
-        * rsync
-        * scp
-        * sftp
-        * ssh
-        * autossh
+### eicproxy utility provides the following features:
+* Brokers ec2 ssh access using AWS credentials with EIC.
+* Uses ec2 instance id or tag Name as hostnames.
+* supports bastion / jump hosts
+* works with ssh based tools like:
+    * ansible
+    * rsync
+    * scp
+    * sftp
+    * ssh
+    * autossh
 
 Usage examples:
 ad-hoc via command line ssh options:
@@ -61,3 +61,12 @@ Host dev-aws-profile-i-*
 Host awstn-*
     ProxyCommand tagname=%h; eicproxy %r@${tagname#awstn\-}:%p --use-tag-name
 ```
+
+
+## Project setup:
+1. `pip install pipenv`
+2. `pipenv install --three`
+3. `pip install -e .`
+
+When switching branches, best to clean up and then repeat the above setup steps.
+`pipenv clean`
