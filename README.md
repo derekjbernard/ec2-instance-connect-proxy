@@ -64,10 +64,7 @@ Host awstn-*
 
 
 ## Project setup:
-1. Install pipenv:
-```bash
-pip install pipenv
-```
+1. Install pipenv: `pip install pipenv`
 2. Remove any unused dependencies: `pipenv clean` 
 3. Install required dependancies: `pipenv install --three`
 4. Activate Pipenv in shell: `pipenv shell`
