@@ -64,9 +64,11 @@ Host awstn-*
 
 
 ## Project setup:
-1. `pip install pipenv`
-2. `pipenv install --three`
-3. `pip install -e .`
-
-When switching branches, best to clean up and then repeat the above setup steps.
-`pipenv clean`
+1. Install pipenv:
+```bash
+pip install pipenv
+```
+2. Remove any unused dependencies: `pipenv clean` 
+3. Install required dependancies: `pipenv install --three`
+4. Activate Pipenv in shell: `pipenv shell`
+5. Install this project: `pip install -e .`
